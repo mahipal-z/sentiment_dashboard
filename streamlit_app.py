@@ -1,6 +1,19 @@
 #Script for Streamlit application using HuggingFace models
 import pandas as pd
 import streamlit as st
+import transformers
+import os
+
+#text = transformers.__version__
+#st.write("version", text)
+
+#cwd_ = os.getcwd()
+#st.write("Display", cwd_)
+
+#env = os.environ
+#st.write("env", env)
+#os.environ["TRANSFORMERS_CACHE"] = cwd_
+
 from transformers import pipeline
 from transformers import AutoTokenizer
 from PIL import Image
@@ -8,12 +21,29 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import numpy as np
 
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-tokenizer = AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest")
-sentiment_task = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest", tokenizer=tokenizer)
+@st.cache_resource  # 👈 Add the caching decorator
+def load_summarizer():
+    return pipeline("summarization", model="facebook/bart-large-cnn")
 
+summarizer = load_summarizer()
 
-dataset = pd.read_csv("metacritics_mario_odyssey.csv")
+@st.cache_resource  # 👈 Add the caching decorator
+def load_tokenizer():
+    return AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest")
+tokenizer = load_tokenizer()
+#cache_dir=cwd()
+#st.write("directory", cache_dir)
+
+@st.cache_resource  # 👈 Add the caching decorator
+def load_sentiment_task():
+    return pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest", tokenizer=tokenizer)
+sentiment_task = load_sentiment_task()
+
+@st.cache_data  # 👈 Add the caching decorator
+def load_data(url):
+    df = pd.read_csv(url)
+    return df
+dataset = load_data("metacritics_mario_odyssey.csv")
 #first_record = dataset.iloc[0,:]
 #first_comment = first_record['Comment']
 
